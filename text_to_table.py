@@ -61,7 +61,7 @@ def odczytaj_tekst_ze_zdjecia(sciezka) -> str:
     wyostrzony = cv2.GaussianBlur(powiekszony, (0, 0), 3)
     wyostrzony = cv2.addWeighted(powiekszony, 1.5, wyostrzony, -0.5, 0)
 
-    # Podzielić na 4 kolumny
+    # Dzielenie na 4 kolumny
     os.makedirs("pociete", exist_ok=True)
     dane = pytesseract.image_to_data(powiekszony, output_type=pytesseract.Output.DICT)
     etykiety = ["#Events", "%Parent", "%Total"]
@@ -77,7 +77,7 @@ def odczytaj_tekst_ze_zdjecia(sciezka) -> str:
             # Wyodrębnianie prostokąta na pełną wysokość obrazu
             roi = powiekszony[y : y + h, x - 10 : x + w + 8]
             szerokosci += w + 20
-            # Zapisz wycięty prostokąt
+            # Zapis wyciętego prostokąta
             cv2.imwrite(f'pociete/{dane["text"][i]}.png', roi)
     roi2 = powiekszony[0 : powiekszony.shape[0], 0 : powiekszony.shape[1] - szerokosci]
     cv2.imwrite(f"pociete/Nazwy.png", roi2)
@@ -98,6 +98,7 @@ def odczytaj_tekst_ze_zdjecia(sciezka) -> str:
     tekst[2].insert(0, "")  # Dla %Parent
     tekst[3].insert(0, "")  # Dla %Total
 
+    # czyszczenie danych
     for i in range(len(tekst[0])):
         try:
             wartość = str(tekst[0][i])
@@ -109,18 +110,17 @@ def odczytaj_tekst_ze_zdjecia(sciezka) -> str:
     for kolumna in [2, 3]:
         for i in range(len(tekst[kolumna])):
             try:
-                wartość = str(tekst[kolumna][i])
+                wartość_str:str = str(tekst[kolumna][i])
+                wartość_f: float = float(tekst[kolumna][i])
 
-                if wartość[0] == "0" and wartość[1] != ".":
-                    tekst[kolumna][i] = str(float(wartość) / 10)
+                if wartość_str[-2] != ".":
+                    tekst[kolumna][i] = str(float(wartość_f) / 10)
 
-                wartość = float(tekst[kolumna][i])
+                if wartość_f > 100:
+                    tekst[kolumna][i] = str(wartość_f / 10)
 
-                if wartość > 100:
-                    tekst[kolumna][i] = str(wartość / 10)
-
-                if kolumna == 3 and wartość > float(tekst[2][i]):
-                    tekst[kolumna][i] = str(wartość / 10)
+                if kolumna == 3 and wartość_f > float(tekst[2][i]):
+                    tekst[kolumna][i] = str(wartość_f / 10)
             except (ValueError, IndexError):
                 pass
 
@@ -129,7 +129,7 @@ def odczytaj_tekst_ze_zdjecia(sciezka) -> str:
         df = pd.DataFrame(
             {
                 "Nazwy": tekst[0],  # Zawiera nazwy
-                "#Eve434nts": tekst[1],  # Zawiera #Events
+                "#Eve434nts": tekst[1],  # Zawiera #EventsS
                 "%Parent": tekst[2],  # Zawiera %Parent
                 "%Total": tekst[3],  # Zawiera %Total
             }
@@ -169,7 +169,7 @@ def main_multi(folder_zrodlowy, folder_dla_wynikow):
             nazwa_arkusza = os.path.splitext(zdjecie)[0]
             arkusze[nazwa_arkusza] = df
 
-    timestamp = datetime.now().strftime("%Y_%m_%d_%H:%M")
+    timestamp = datetime.now().strftime("%Y-%m-%d %H.%M")
     nazwa_pliku_xlsx = os.path.join(folder_dla_wynikow, f"wyniki-{timestamp}.xlsx")
     with pd.ExcelWriter(nazwa_pliku_xlsx, engine="xlsxwriter") as writer:
         for nazwa_arkusza, df in arkusze.items():  # Teraz mamy df, nie ścieżkę do CSV
