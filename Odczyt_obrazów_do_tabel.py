@@ -28,18 +28,9 @@ def run_script():
     except Exception as e:
         messagebox.showerror("Błąd", f"Wystąpił problem: {e}")
 
-# if platform.system() == "Windows":
-#     icon_path = "icon.ico"
-# else:
-#     icon_path = "icon.png" 
-
-
 root = tk.Tk()
-# if platform.system() == "Windows":
-#     root.iconbitmap(icon_path)
-# else:
-#     icon_image = tk.PhotoImage(file=icon_path)
-#     root.iconphoto(True, icon_image)
+if platform.system() == "Windows":
+    root.iconbitmap(r"X:\Odczytywanie-tekstu-z-tabel\icon.ico")
 
 root.title("Konwersja Obrazów na Tabele")
 
