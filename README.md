@@ -1,7 +1,7 @@
-# Odczyt_tabel_ze_zdjec
+# Odczyt tabel ze zdjęć
 
 ## Opis projektu
-**Odczyt_tabel_ze_zdjec** to aplikacja, która automatycznie odczytuje dane tabelaryczne ze zdjęć i zapisuje je w skoroszycie programu Excel. Projekt został stworzony, aby ułatwić automatyzację przekształcania danych wizualnych w edytowalne pliki.
+**Odczyt tabel ze zdjęć** to aplikacja, która automatycznie odczytuje dane tabelaryczne ze zdjęć i zapisuje je w skoroszycie programu Excel. Projekt został stworzony, aby ułatwić automatyzację przekształcania danych wizualnych w edytowalne pliki.
 
 ## Funkcjonalności
 - Analiza zawartości wizualnej zdjęcia i rozpoznawanie tabel.
