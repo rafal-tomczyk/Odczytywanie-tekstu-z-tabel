@@ -16,14 +16,13 @@ def remove_squares(obraz):
     Returns:
         numpy.ndarray: Obraz po usunięciu kwadratów.
     """
-    blurred = cv2.GaussianBlur(obraz, (5, 3), 0)
-    edges = cv2.Canny(blurred, 110, 300)
+    edges = cv2.Canny(obraz, 110, 300)
     kontury, _ = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     for cnt in kontury:
         x, y, w, h = cv2.boundingRect(cnt)
-        if 15 < w < 40 and 15 < h < 40:
-            przesuniety_x:int = x-15
-            dodatkowa_szerokosc:int = 15
+        if 20 < w < 40 and 25 < h < 40:
+            przesuniety_x:int = x-25
+            dodatkowa_szerokosc:int = 25
             if przesuniety_x <= 0:
                 przesuniety_x = x
                 dodatkowa_szerokosc = 0
@@ -58,8 +57,7 @@ def odczytaj_tekst_ze_zdjecia(sciezka) -> str:
 
     obraz = cv2.imread(sciezka)
     skala_szarosci = cv2.cvtColor(obraz, cv2.COLOR_BGR2GRAY)
-    bez_kwadratow = remove_squares(skala_szarosci)
-    wyciety = crop_to_content(bez_kwadratow)
+    wyciety = crop_to_content(skala_szarosci)
     szerokosc = int(wyciety.shape[1] + 100)
     wysokosc = int(wyciety.shape[0] + 100)
     powiekszony = cv2.resize(wyciety, (szerokosc, wysokosc))
@@ -84,8 +82,9 @@ def odczytaj_tekst_ze_zdjecia(sciezka) -> str:
             szerokosci += w + 20
             # Zapis wyciętego prostokąta
             cv2.imwrite(f'pociete/{dane["text"][i]}.png', roi)
-    roi2 = powiekszony[0 : powiekszony.shape[0], 0 : powiekszony.shape[1] - szerokosci]
-    cv2.imwrite(f"pociete/Nazwy.png", roi2)
+    roi2 = powiekszony[0 : powiekszony.shape[0], 0 : powiekszony.shape[1] - szerokosci - 30]
+    bez_kwadratow = remove_squares(roi2)
+    cv2.imwrite(f"pociete/Nazwy.png",bez_kwadratow)
 
     etykiety = ["Nazwy.png", "#Events.png", "%Parent.png", "%Total.png"]
 
