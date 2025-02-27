@@ -40,10 +40,16 @@
 ## Przykład
 Przykładowe użycie programu:
 1. Zdjęcie wejściowe:
-
-
+   
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/99ed6f9f-f6f2-4756-aa91-b5866786e980" width="500">
+</p>
 
 2. Uzyskany wynik w Excel:
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/9475d281-f2a0-4d64-a5ab-682e733f0c10" width="500">
+</p>
 
 
 
