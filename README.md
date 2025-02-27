@@ -41,23 +41,16 @@
 Przykładowe użycie programu:
 1. Zdjęcie wejściowe:
 
-   ![Przykładowe zdjęcie tabeli](example-table-image.png)
+
 
 2. Uzyskany wynik w Excel:
 
-   | Kolumna 1 | Kolumna 2 | Kolumna 3 |
-      |-----------|-----------|-----------|
-   | Dane 1    | Dane 2    | Dane 3    |
+
 
 ## Wymagania
-- Python 3.12.3 lub nowszy.
-- System operacyjny: macOS, Windows, lub Linux.
+- Python 3.12.3.
+- System operacyjny: macOS(nie wspierany dla aplikacji desktopowej), Windows, Linux.
 
-## Rozwój projektu
-Chcesz coś dodać? Zachęcam do współpracy! Wykonaj forka repozytorium, wdróż zmiany, a następnie wyślij pull request.
-
-## Kontakt
-Jeśli masz pytania lub chciałbyś zgłosić błąd, skontaktuj się poprzez e-mail: **[adres_email@domain.com]**.
 
 ## Licencja
 Projekt dostępny na licencji MIT. Zapoznaj się z [plikem LICENSE](LICENSE) przed użyciem.# Odczyt_tabel_ze_zdjec
