@@ -22,7 +22,12 @@ def remove_squares(obraz):
     for cnt in kontury:
         x, y, w, h = cv2.boundingRect(cnt)
         if 15 < w < 40 and 15 < h < 40:
-            cv2.rectangle(obraz, (x, y), (x + w, y + h), (255, 255, 255), -1)
+            przesuniety_x:int = x-15
+            dodatkowa_szerokosc:int = 15
+            if przesuniety_x <= 0:
+                przesuniety_x = x
+                dodatkowa_szerokosc = 0
+            cv2.rectangle(obraz, (przesuniety_x, y), (przesuniety_x + w + dodatkowa_szerokosc, y + h), (255, 255, 255), -1)
     return obraz
 
 
@@ -61,7 +66,7 @@ def odczytaj_tekst_ze_zdjecia(sciezka) -> str:
     wyostrzony = cv2.GaussianBlur(powiekszony, (0, 0), 3)
     wyostrzony = cv2.addWeighted(powiekszony, 1.5, wyostrzony, -0.5, 0)
 
-    # Podzielić na 4 kolumny
+    # Dzielenie na 4 kolumny
     os.makedirs("pociete", exist_ok=True)
     dane = pytesseract.image_to_data(powiekszony, output_type=pytesseract.Output.DICT)
     etykiety = ["#Events", "%Parent", "%Total"]
@@ -77,7 +82,7 @@ def odczytaj_tekst_ze_zdjecia(sciezka) -> str:
             # Wyodrębnianie prostokąta na pełną wysokość obrazu
             roi = powiekszony[y : y + h, x - 10 : x + w + 8]
             szerokosci += w + 20
-            # Zapisz wycięty prostokąt
+            # Zapis wyciętego prostokąta
             cv2.imwrite(f'pociete/{dane["text"][i]}.png', roi)
     roi2 = powiekszony[0 : powiekszony.shape[0], 0 : powiekszony.shape[1] - szerokosci]
     cv2.imwrite(f"pociete/Nazwy.png", roi2)
@@ -98,6 +103,7 @@ def odczytaj_tekst_ze_zdjecia(sciezka) -> str:
     tekst[2].insert(0, "")  # Dla %Parent
     tekst[3].insert(0, "")  # Dla %Total
 
+    # czyszczenie danych
     for i in range(len(tekst[0])):
         try:
             wartość = str(tekst[0][i])
@@ -106,21 +112,44 @@ def odczytaj_tekst_ze_zdjecia(sciezka) -> str:
         except (ValueError, IndexError):
             pass
 
+    for i in range(len(tekst[1])):
+        try:
+            wartość_str: str = str(tekst[1][i])
+            if "," in wartość_str:
+                wartość_str = wartość_str.replace(",", "")
+                tekst[1][i] = wartość_str
+        except ValueError:
+            pass
+
     for kolumna in [2, 3]:
         for i in range(len(tekst[kolumna])):
             try:
-                wartość = str(tekst[kolumna][i])
+                wartość_str: str = str(tekst[kolumna][i])
 
-                if wartość[0] == "0" and wartość[1] != ".":
-                    tekst[kolumna][i] = str(float(wartość) / 10)
+                if wartość_str[0] == "o":
+                    wartość_str = "0." + wartość_str[1:]
+                    tekst[kolumna][i] = wartość_str
 
-                wartość = float(tekst[kolumna][i])
+                if wartość_str[-1] == ",":
+                    wartość_str = wartość_str[:-1]
+                    tekst[kolumna][i] = wartość_str
 
-                if wartość > 100:
-                    tekst[kolumna][i] = str(wartość / 10)
+                wartość_f: float = float(tekst[kolumna][i])
 
-                if kolumna == 3 and wartość > float(tekst[2][i]):
-                    tekst[kolumna][i] = str(wartość / 10)
+                if wartość_str[-2] != ".":
+                    print
+                    tekst[kolumna][i] = str(float(wartość_f) / 10)
+
+                if wartość_f > 100:
+                    tekst[kolumna][i] = str(wartość_f / 10)
+
+                if kolumna == 3:
+                    try:
+                        wartosc_kolumna2 = float(tekst[2][i])
+                        if wartość_f > wartosc_kolumna2:
+                            tekst[kolumna][i] = str(wartość_f / 10)
+                    except ValueError:
+                        pass
             except (ValueError, IndexError):
                 pass
 
@@ -129,7 +158,7 @@ def odczytaj_tekst_ze_zdjecia(sciezka) -> str:
         df = pd.DataFrame(
             {
                 "Nazwy": tekst[0],  # Zawiera nazwy
-                "#Eve434nts": tekst[1],  # Zawiera #Events
+                "#Events": tekst[1],  # Zawiera #EventsS
                 "%Parent": tekst[2],  # Zawiera %Parent
                 "%Total": tekst[3],  # Zawiera %Total
             }
@@ -166,11 +195,36 @@ def main_multi(folder_zrodlowy, folder_dla_wynikow):
         if zdjecie.lower().endswith((".png", ".jpg", ".jpeg")):
             sciezka_do_zdjecia = os.path.join(folder_zrodlowy, zdjecie)
             df = odczytaj_tekst_ze_zdjecia(sciezka_do_zdjecia)
+            df.columns = [""] * len(df.columns)
+
+            for col in [1, 2, 3]:
+                if col < len(df.columns):
+                    df.iloc[:, col] = df.iloc[:, col].apply(
+                        lambda x: (
+                            float(x) if str(x).replace(".", "", 1).isdigit() else x
+                        )
+                    )
             nazwa_arkusza = os.path.splitext(zdjecie)[0]
             arkusze[nazwa_arkusza] = df
 
-    timestamp = datetime.now().strftime("%Y_%m_%d_%H:%M")
+    timestamp = datetime.now().strftime("%Y-%m-%d %H.%M")
     nazwa_pliku_xlsx = os.path.join(folder_dla_wynikow, f"wyniki-{timestamp}.xlsx")
     with pd.ExcelWriter(nazwa_pliku_xlsx, engine="xlsxwriter") as writer:
-        for nazwa_arkusza, df in arkusze.items():  # Teraz mamy df, nie ścieżkę do CSV
+        for nazwa_arkusza, df in arkusze.items():
             df.to_excel(writer, sheet_name=nazwa_arkusza, index=False, header=False)
+            worksheet = writer.sheets[nazwa_arkusza]
+
+            # Zdefiniowanie formatów
+            green_format = writer.book.add_format({'bg_color': '#C6EFCE'})  # Zielony
+
+            # Ustawienie kolorów dla komórek
+            for row_num in range(df.shape[0]):  # iteracja po wierszach
+                for col_num in range(df.shape[1]):  # iteracja po kolumnach
+                    cell_value = df.iat[row_num, col_num]  # Pobranie wartości komórki
+                    if isinstance(cell_value, float):  # Sprawdzenie, czy wartość jest typu float
+                        worksheet.write(row_num, col_num, cell_value, green_format)  # +1 dla nagłówka
+                    else:
+                        worksheet.write(row_num, col_num, cell_value)  # Zapisz wartość bez formatu
+
+
+main_multi("tabele_testowe", "tabele_testowe")
